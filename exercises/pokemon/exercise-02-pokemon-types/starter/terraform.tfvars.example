@@ -1,0 +1,44 @@
+# Example terraform.tfvars - Your Pokemon Team!
+#
+# Customize this with your favorite Pokemon
+# Try breaking the validation rules to see what happens!
+
+favorite_pokemon = {
+  name = "gengar"
+  type = "ghost"
+  hp   = 60
+}
+
+pokemon_team = [
+  { name = "pikachu", type = "electric", hp = 35 },
+  { name = "charizard", type = "fire", hp = 78 },
+  { name = "blastoise", type = "water", hp = 79 },
+  { name = "venusaur", type = "grass", hp = 80 },
+  { name = "gengar", type = "ghost", hp = 60 },
+  { name = "dragonite", type = "dragon", hp = 91 },
+]
+
+# Try uncommenting this to break validation (7 Pokemon!):
+# pokemon_team = [
+#   { name = "pikachu", type = "electric", hp = 35 },
+#   { name = "charizard", type = "fire", hp = 78 },
+#   { name = "blastoise", type = "water", hp = 79 },
+#   { name = "venusaur", type = "grass", hp = 80 },
+#   { name = "gengar", type = "ghost", hp = 60 },
+#   { name = "dragonite", type = "dragon", hp = 91 },
+#   { name = "mewtwo", type = "psychic", hp = 106 },  # 7th - too many!
+# ]
+
+# Try uncommenting this to break HP validation:
+# pokemon_team = [
+#   { name = "hacked_pokemon", type = "normal", hp = 999 },  # HP too high!
+# ]
+
+pokedex = {
+  bulbasaur  = { id = 1, type = "grass", hp = 45 }
+  charmander = { id = 4, type = "fire", hp = 39 }
+  squirtle   = { id = 7, type = "water", hp = 44 }
+  pikachu    = { id = 25, type = "electric", hp = 35 }
+  eevee      = { id = 133, type = "normal", hp = 55 }
+  snorlax    = { id = 143, type = "normal", hp = 160 }
+}

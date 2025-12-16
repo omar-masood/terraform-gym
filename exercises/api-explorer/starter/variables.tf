@@ -1,10 +1,10 @@
-# Variables for the API Explorer challenge
+# Variables for the Pokemon API Explorer challenge
 #
 # Define variables for:
-# 1. quote_api_url (string) - the API endpoint
-# 2. pet_prefix (string) - prefix for codename
-# 3. lucky_min (number) - minimum lucky number
-# 4. lucky_max (number) - maximum lucky number
+# 1. pokemon_api_url (string) - the Pokemon API endpoint
+# 2. pet_prefix (string) - prefix for trainer name
+# 3. lucky_min (number) - minimum Pokemon ID
+# 4. lucky_max (number) - maximum Pokemon ID
 #
 # Hint: Give sensible defaults!
 

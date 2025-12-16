@@ -1,0 +1,113 @@
+# Challenge: Pokedex Infrastructure
+# Example Terraform Variables File
+#
+# Copy this file to terraform.tfvars and customize for your team!
+# cp terraform.tfvars.example terraform.tfvars
+
+# ============================================================================
+# YOUR TRAINER INFO
+# ============================================================================
+
+student_name = "your-name-here" # Replace with your name!
+
+# ============================================================================
+# YOUR POKEMON TEAM
+# ============================================================================
+
+# Define your Pokemon team (1-6 Pokemon)
+# Each Pokemon needs: name (lowercase) and id (1-1010)
+#
+# Find Pokemon IDs at: https://pokeapi.co/
+# Or use these quick references:
+#   1: bulbasaur    4: charmander    7: squirtle
+#  25: pikachu     39: jigglypuff   52: meowth
+#  94: gengar     130: gyarados    143: snorlax
+# 149: dragonite  150: mewtwo      151: mew
+
+pokemon_team = [
+  { name = "bulbasaur", id = 1 },
+  { name = "charmander", id = 4 },
+  { name = "squirtle", id = 7 },
+  { name = "pikachu", id = 25 },
+  # Add more Pokemon here (up to 6 total)
+]
+
+# ============================================================================
+# DEPLOYMENT CONFIGURATION
+# ============================================================================
+
+# Choose your deployment path:
+# - "docker": Run locally with Docker (no AWS needed)
+# - "ec2": Deploy to AWS EC2 (requires AWS credentials)
+deployment_path = "docker"
+
+# EC2 Configuration (only if deployment_path = "ec2")
+# aws_region    = "us-east-1"
+# instance_type = "t3.micro"
+
+# Docker Configuration (only if deployment_path = "docker")
+# docker_image = "nginx:alpine"
+
+# ============================================================================
+# OPTIONAL SETTINGS
+# ============================================================================
+
+environment   = "pokemon-gym"
+auto_teardown = "2h"
+
+# ============================================================================
+# EXAMPLE TEAMS
+# ============================================================================
+
+# The Original Starters
+# pokemon_team = [
+#   { name = "bulbasaur", id = 1 },
+#   { name = "charmander", id = 4 },
+#   { name = "squirtle", id = 7 },
+# ]
+
+# Pikachu's Friends
+# pokemon_team = [
+#   { name = "pikachu", id = 25 },
+#   { name = "jigglypuff", id = 39 },
+#   { name = "meowth", id = 52 },
+# ]
+
+# Legendary Team
+# pokemon_team = [
+#   { name = "articuno", id = 144 },
+#   { name = "zapdos", id = 145 },
+#   { name = "moltres", id = 146 },
+#   { name = "mewtwo", id = 150 },
+#   { name = "mew", id = 151 },
+# ]
+
+# Type Diversity Team (shows off dynamic blocks!)
+# pokemon_team = [
+#   { name = "bulbasaur", id = 1 },   # grass/poison
+#   { name = "charmander", id = 4 },  # fire
+#   { name = "squirtle", id = 7 },    # water
+#   { name = "pikachu", id = 25 },    # electric
+#   { name = "gengar", id = 94 },     # ghost/poison
+#   { name = "dragonite", id = 149 }, # dragon/flying
+# ]
+
+# ============================================================================
+# NOTES
+# ============================================================================
+
+# Pokemon names must be:
+#   - Lowercase
+#   - No spaces (use hyphens: "mr-mime" not "mr mime")
+#   - Match the PokeAPI format
+
+# Pokemon IDs must be:
+#   - Between 1 and 1010
+#   - Valid Pokemon from the API
+
+# Team size must be:
+#   - Between 1 and 6 Pokemon (like a real Pokemon team!)
+
+# After editing, test with:
+#   terraform validate
+#   terraform plan
