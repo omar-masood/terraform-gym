@@ -33,3 +33,6 @@ resource "aws_s3_bucket" "example" {
 # Hint: Use count = var.enable_versioning ? 1 : 0
 
 # TODO: Complete outputs.tf with bucket details
+
+
+
