@@ -20,3 +20,6 @@ override.tf
 override.tf.json
 *_override.tf
 *_override.tf.json
+
+# Solution folders (students should work these out themselves!)
+**/solution/
