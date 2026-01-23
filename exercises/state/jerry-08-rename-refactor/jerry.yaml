@@ -1,0 +1,101 @@
+# Jerry Configuration for Exercise: Rename Refactor
+version: 1
+exercise: jerry-08-rename-refactor
+
+# Scenario configuration
+scenarios:
+  - type: move
+    config:
+      scenario: rename
+      renames:
+        - from: aws_s3_bucket.bucket1
+          to: aws_s3_bucket.application_data
+        - from: aws_s3_bucket.bucket2
+          to: aws_s3_bucket.user_uploads
+        - from: random_id.suffix1
+          to: random_id.app_suffix
+        - from: random_id.suffix2
+          to: random_id.uploads_suffix
+      # Jerry will modify the .tf files but NOT the state
+      backup_original: true
+      backup_file: main.tf.backup
+
+# Validation criteria
+validation:
+  must_resolve:
+    - state_addressing_mismatch
+  terraform_plan_clean: true
+  max_time: 30m
+  # Both solutions are valid
+  valid_resolutions:
+    - state_mv_commands
+    - moved_blocks
+
+  # Additional checks
+  checks:
+    - type: buckets_not_destroyed
+      message: "Buckets should NOT have been destroyed and recreated"
+    - type: state_addresses_match_code
+      message: "State addresses must match resource addresses in code"
+    - type: data_preserved
+      message: "Bucket data must be preserved (no destroy/create cycle)"
+
+# Hint configuration
+hints:
+  enabled: true
+  max_level: 5
+  penalty_per_hint: 5
+
+# Grading
+grading:
+  base_score: 100
+  time_bonus:
+    under_20m: 15
+    under_25m: 10
+  penalties:
+    hint_used: -5
+    spoiler_used: -50
+    destroyed_resources: -100  # Major penalty for destroying buckets
+  bonus:
+    used_moved_blocks: 10  # Bonus for using modern approach
+    documented_approach: 5  # Explained why they chose their method
+
+# Learning objectives alignment
+objectives:
+  terraform_associate:
+    - "6d"  # Resource drift and state management
+    - "7b"  # CLI workflow and state inspection/modification
+
+# Expected student actions
+expected_commands:
+  required:
+    - terraform plan  # To identify the problem
+    - terraform state list  # To see current state addresses
+
+  solution_option_a:
+    - terraform state mv aws_s3_bucket.bucket1 aws_s3_bucket.application_data
+    - terraform state mv aws_s3_bucket.bucket2 aws_s3_bucket.user_uploads
+    - terraform state mv random_id.suffix1 random_id.app_suffix
+    - terraform state mv random_id.suffix2 random_id.uploads_suffix
+    - terraform plan  # Verify no changes
+
+  solution_option_b:
+    # Student adds moved blocks to main.tf
+    - terraform plan  # Should show state migration
+    - terraform apply  # Applies the state migration
+
+# Risk level
+risk:
+  level: high
+  warning: "Applying the destructive plan would DELETE production data!"
+  destructive_resources:
+    - aws_s3_bucket.bucket1
+    - aws_s3_bucket.bucket2
+
+# Setup requirements
+setup:
+  requires_aws: true
+  requires_backend: s3
+  infrastructure:
+    - 2 S3 buckets with data
+    - Random IDs for unique naming

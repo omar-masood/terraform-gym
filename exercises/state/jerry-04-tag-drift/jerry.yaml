@@ -1,0 +1,46 @@
+# Jerry Configuration for Exercise: Tag Drift
+version: 1
+exercise: jerry-04-tag-drift
+
+# Scenario configuration
+scenarios:
+  - type: drift
+    config:
+      scenario: tags
+      resource: aws_s3_bucket.data
+      changes:
+        add:
+          CostCenter: "JERRY-FIXME"
+        modify:
+          Environment: "Production"  # Was "Learning"
+        remove:
+          - ManagedBy
+
+# Validation criteria
+validation:
+  must_resolve:
+    - drift_tags
+  terraform_plan_clean: true
+  max_time: 25m
+  # Either resolution is valid
+  valid_resolutions:
+    - revert_to_terraform
+    - update_terraform
+
+# Hint configuration
+hints:
+  enabled: true
+  max_level: 5
+  penalty_per_hint: 5
+
+# Grading
+grading:
+  base_score: 100
+  time_bonus:
+    under_15m: 10
+    under_20m: 5
+  penalties:
+    hint_used: -5
+    spoiler_used: -50
+  bonus:
+    explained_choice: 10  # If student documents why they chose their approach

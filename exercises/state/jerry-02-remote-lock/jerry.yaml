@@ -1,0 +1,53 @@
+# Jerry Configuration for Exercise: Remote Lock
+version: 1
+exercise: jerry-02-remote-lock
+
+# Scenario configuration
+scenarios:
+  - type: lock
+    config:
+      backend: s3
+      lock_type: native  # S3 native locking (use_lockfile)
+      stale_duration: 4h
+      lock_info:
+        operation: OperationTypeApply
+        who: github-actions@ci-runner-12345
+        version: "1.9.0"
+        info: ""
+
+# Validation criteria
+validation:
+  must_resolve:
+    - lock_removed
+  terraform_plan_succeeds: true
+  max_time: 25m
+  valid_methods:
+    - force_unlock     # terraform force-unlock <ID>
+    - manual_delete    # aws s3 rm (emergency method)
+
+# Learning objectives
+objectives:
+  - understand_s3_locking
+  - locate_remote_locks
+  - use_force_unlock
+  - know_emergency_methods
+  - prevent_ci_locks
+
+# Hint configuration
+hints:
+  enabled: true
+  max_level: 5
+  penalty_per_hint: 5
+
+# Grading
+grading:
+  base_score: 100
+  time_bonus:
+    under_15m: 10
+    under_20m: 5
+  penalties:
+    hint_used: -5
+    spoiler_used: -50
+  bonus:
+    explained_both_methods: 10  # If student documents both unlock methods
+    used_force_unlock: 5        # Bonus for using recommended method

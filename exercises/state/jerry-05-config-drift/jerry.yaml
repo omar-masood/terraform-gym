@@ -1,0 +1,202 @@
+# Jerry-05: Config Drift Exercise Configuration
+# This file configures the jerry-ctl CLI tool to automate this chaos scenario
+
+exercise:
+  id: jerry-05-config-drift
+  name: "Config Drift - Security Settings Disabled"
+  difficulty: intermediate
+  track: state
+  estimated_time: 30-45 minutes
+
+scenario:
+  description: |
+    Jerry disabled S3 bucket versioning and encryption via AWS Console
+    for "cost optimization" and "performance improvement" without approval.
+    Unlike tag drift, this affects actual data protection and compliance.
+
+  jerry_message: |
+    Hey team! 👋 I noticed our S3 bucket was getting expensive with all that
+    versioning enabled. Also the encryption was slowing down uploads. I went
+    ahead and disabled both via the AWS Console to optimize for cost and
+    performance. Bucket is running MUCH faster now! 💰⚡
+    You're welcome! 😎
+
+  severity: high  # Unlike jerry-04 (low), this has real security impact
+
+chaos:
+  type: config_drift
+
+  # What Jerry changed via AWS Console
+  changes:
+    - resource: aws_s3_bucket_versioning
+      action: suspend
+      attribute: versioning_configuration.status
+      from: "Enabled"
+      to: "Suspended"
+      cli_command: |
+        aws s3api put-bucket-versioning \
+          --bucket {{bucket_name}} \
+          --versioning-configuration Status=Suspended
+
+    - resource: aws_s3_bucket_server_side_encryption_configuration
+      action: delete
+      cli_command: |
+        aws s3api delete-bucket-encryption \
+          --bucket {{bucket_name}}
+
+  # What Jerry did NOT touch (thankfully)
+  unchanged:
+    - aws_s3_bucket_public_access_block
+    - aws_s3_bucket (tags)
+
+learning_objectives:
+  - Detect configuration drift that affects security
+  - Assess risk of different drift types (config vs metadata)
+  - Understand irreversible changes (deleted versions)
+  - Think critically before applying changes
+  - Document decision-making for security changes
+  - Recognize when manual changes violate best practices
+
+exam_objectives:
+  - "6d: Resource drift and Terraform state"
+  - "3d: Generate and review an execution plan"
+  - "3g: Understand destructive changes"
+
+prerequisites:
+  exercises:
+    - jerry-01-stale-lock
+    - jerry-02-remote-lock
+    - jerry-04-tag-drift
+
+  knowledge:
+    - S3 bucket security features
+    - Versioning vs encryption
+    - Compliance requirements basics
+
+  tools:
+    - terraform >= 1.0
+    - aws-cli >= 2.0
+    - jq (for validation scripts)
+
+validation:
+  checks:
+    - name: drift_resolved
+      description: "terraform plan shows no changes"
+      command: terraform plan -detailed-exitcode
+      expected_exit_code: 0
+
+    - name: versioning_enabled
+      description: "Bucket versioning is enabled"
+      command: |
+        aws s3api get-bucket-versioning --bucket {{bucket_name}} \
+          --query 'Status' --output text
+      expected_output: "Enabled"
+
+    - name: encryption_configured
+      description: "Bucket encryption is configured"
+      command: |
+        aws s3api get-bucket-encryption --bucket {{bucket_name}} \
+          --query 'Rules[0].ApplyServerSideEncryptionByDefault.SSEAlgorithm' \
+          --output text
+      expected_output: "AES256"
+
+    - name: decision_documented
+      description: "Student documented their decision"
+      command: test -f DECISION.md
+      expected_exit_code: 0
+
+  partial_credit:
+    - condition: drift_resolved
+      points: 40
+      message: "Drift is resolved (plan shows no changes)"
+
+    - condition: versioning_enabled
+      points: 25
+      message: "Versioning is re-enabled"
+
+    - condition: encryption_configured
+      points: 25
+      message: "Encryption is re-configured"
+
+    - condition: decision_documented
+      points: 10
+      message: "Decision is documented"
+
+solution:
+  approaches:
+    - name: option_a_reenable
+      recommended: true
+      description: "Re-enable security features (correct for most scenarios)"
+      risk: low
+      steps:
+        - "Review terraform plan output"
+        - "Assess security and compliance implications"
+        - "Document decision in DECISION.md"
+        - "Run terraform apply to restore security settings"
+        - "Verify with terraform plan (no changes)"
+
+      when_to_use:
+        - "Compliance requires encryption"
+        - "Data protection is important"
+        - "No documented cost justification"
+        - "Security is non-negotiable"
+
+    - name: option_b_accept
+      recommended: false
+      description: "Accept reduced security (requires justification)"
+      risk: high
+      steps:
+        - "Review terraform plan output"
+        - "Get written approval from security/compliance"
+        - "Document risk acceptance in DECISION.md"
+        - "Update Terraform to match current state"
+        - "Verify with terraform plan (no changes)"
+
+      when_to_use:
+        - "You have documented cost analysis"
+        - "Compliance doesn't require these features"
+        - "Risk formally assessed and accepted"
+        - "Written approval obtained"
+
+      warnings:
+        - "No versioning (can't recover deleted objects)"
+        - "No encryption at rest"
+        - "May violate compliance requirements"
+        - "May violate security policies"
+
+discussion_questions:
+  - "What's the difference between tag drift and configuration drift in terms of risk?"
+  - "What data protection did we lose when Jerry suspended versioning?"
+  - "Can we recover object versions that were deleted while versioning was suspended?"
+  - "What compliance regulations might require encryption at rest?"
+  - "Is Jerry's cost/performance reasoning valid? How would you verify?"
+  - "Should Jerry have console access in production? Why or why not?"
+  - "How would you prevent this with IAM policies and AWS Config rules?"
+  - "What's the difference between versioning Enabled, Suspended, and Never Enabled?"
+
+real_world_parallels:
+  - "Developer disables WAF rule blocking their test traffic"
+  - "DBA turns off backups to speed up migration"
+  - "DevOps disables monitoring during high-load event"
+  - "Engineer opens security group for 'quick debugging'"
+  - "Admin removes MFA requirement for convenience"
+
+key_takeaways:
+  - "Not all drift is equal - configuration changes are more dangerous than metadata"
+  - "Always read and understand the plan before applying"
+  - "Some changes are irreversible (deleted data doesn't come back)"
+  - "Security defaults exist for reasons - don't disable without proper assessment"
+  - "Infrastructure changes should go through proper change management"
+  - "Good intentions don't prevent bad outcomes"
+
+metadata:
+  created: 2025-12-16
+  version: 1.0
+  author: Terraform Gym
+  tags:
+    - state
+    - drift
+    - security
+    - s3
+    - jerry-track
+    - chaos-engineering

@@ -1,0 +1,16 @@
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+!*.tfvars.example
+.terraform.lock.hcl
+
+# Jerry
+.jerry/
+
+# Backup files (created by jerry move scenario)
+*.backup
+
+# OS
+.DS_Store

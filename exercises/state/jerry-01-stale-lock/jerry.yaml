@@ -1,0 +1,35 @@
+# Jerry Configuration for Exercise: Stale Lock
+version: 1
+exercise: jerry-01-stale-lock
+
+# Scenario configuration
+scenarios:
+  - type: lock
+    config:
+      backend: local
+      age: 2h
+      who: "jerry@jerrys-macbook"
+      operation: "OperationTypeApply"
+
+# Validation criteria
+validation:
+  must_resolve:
+    - state_lock
+  terraform_plan_clean: true
+  max_time: 20m
+
+# Hint configuration
+hints:
+  enabled: true
+  max_level: 5
+  penalty_per_hint: 5
+
+# Grading
+grading:
+  base_score: 100
+  time_bonus:
+    under_10m: 10
+    under_15m: 5
+  penalties:
+    hint_used: -5
+    spoiler_used: -50

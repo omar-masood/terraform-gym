@@ -1,0 +1,15 @@
+# Example variable values for Jerry 02: Remote Lock
+#
+# Copy this file to terraform.tfvars and fill in your values:
+#   cp terraform.tfvars.example terraform.tfvars
+
+# Your name (lowercase, hyphens only)
+student_name = "your-name-here"
+
+# S3 bucket for Terraform state
+# This bucket must already exist with proper permissions
+# You can use the state bucket from Week 00, or create a new one
+state_bucket = "terraform-state-YOUR-ACCOUNT-ID"
+
+# AWS region (optional, defaults to us-east-1)
+aws_region = "us-east-1"

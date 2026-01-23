@@ -1,0 +1,50 @@
+# Jerry Configuration for Exercise: Import Rescue
+version: 1
+exercise: jerry-06-import-rescue
+
+# Scenario configuration
+scenarios:
+  - type: manual-creation
+    config:
+      scenario: manual-bucket
+      resource_type: s3_bucket
+      naming_pattern: "jerry-prod-data-${random}"
+      configuration:
+        versioning: enabled
+        tags:
+          CreatedBy: "jerry"
+          Purpose: "testing"
+          Department: "engineering"
+      # Note: Jerry "forgot" to enable encryption and public access block
+
+# Validation criteria
+validation:
+  must_import:
+    - aws_s3_bucket.jerry_bucket
+    - aws_s3_bucket_versioning.jerry_bucket
+  terraform_plan_clean: true
+  max_time: 40m
+  # Both import methods are valid
+  valid_methods:
+    - legacy_import
+    - import_blocks
+
+# Hint configuration
+hints:
+  enabled: true
+  max_level: 7
+  penalty_per_hint: 5
+
+# Grading
+grading:
+  base_score: 100
+  time_bonus:
+    under_25m: 15
+    under_35m: 10
+  penalties:
+    hint_used: -5
+    spoiler_used: -50
+  bonus:
+    both_methods: 20  # If student tries both import methods
+    added_security: 10  # If student adds encryption/public access block
+    documented_discovery: 5  # If student documents what they found

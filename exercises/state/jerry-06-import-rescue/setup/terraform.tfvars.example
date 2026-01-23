@@ -1,0 +1,5 @@
+# Example Terraform variables
+# Copy this file to terraform.tfvars and customize
+
+aws_region   = "us-east-1"
+student_name = "your-name"  # Replace with your name or GitHub username

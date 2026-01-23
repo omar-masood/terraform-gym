@@ -1,0 +1,270 @@
+# Jerry-07: Deleted Resource
+# Jerry Track - State Management Chaos
+
+metadata:
+  exercise_id: jerry-07-deleted-resource
+  title: "Deleted Resource"
+  track: jerry
+  category: state
+  difficulty: intermediate
+  estimated_time: 20min
+
+  exam_objectives:
+    - "6d: Describe effect of Terraform refresh on state and resource drift"
+    - "7b: Use Terraform CLI to inspect state and resources"
+
+  learning_objectives:
+    - "Understand state vs reality mismatches"
+    - "Learn when to use terraform state rm"
+    - "Practice investigating resource existence"
+    - "Make informed decisions about state cleanup"
+    - "Understand dangers of manual deletions"
+    - "Learn to verify resources in both state and AWS"
+
+  tags:
+    - state-management
+    - state-rm
+    - manual-deletion
+    - state-reality-mismatch
+    - resource-drift
+    - out-of-band-changes
+
+scenario:
+  description: |
+    Jerry deleted an S3 bucket through the AWS Console because he thought it
+    "wasn't being used anymore." The bucket is gone from AWS, but it's still
+    in Terraform state. Now Terraform wants to recreate it.
+
+    Students must decide: Should we recreate the bucket, or remove it from state?
+
+  what_jerry_did:
+    - "Identified an S3 bucket he thought was unused (old_logs)"
+    - "Deleted the bucket via AWS Console to 'save on costs'"
+    - "Did NOT update Terraform state"
+    - "Did NOT run terraform plan before deleting"
+    - "Went into meetings all day (unavailable to help)"
+
+  what_students_learn:
+    - "Terraform state can diverge from AWS reality"
+    - "Manual deletions create state-reality mismatches"
+    - "terraform plan detects missing resources"
+    - "terraform state rm removes resources from state"
+    - "terraform apply can recreate deleted resources"
+    - "Must make informed decisions about state cleanup"
+
+  jerry_quote: "Hey, I cleaned up that old logs bucket that wasn't being used anymore. We weren't using it, right?"
+
+infrastructure:
+  resources:
+    - type: aws_s3_bucket
+      name: app_data
+      description: "Primary application data bucket (still exists)"
+      status: exists
+
+    - type: aws_s3_bucket
+      name: old_logs
+      description: "Old logs bucket (Jerry deleted this one)"
+      status: deleted_by_jerry
+
+    - type: aws_s3_bucket_versioning
+      name: app_data
+      description: "Versioning for app_data bucket"
+      status: exists
+
+the_problem:
+  state_says: "I'm managing aws_s3_bucket.old_logs"
+  aws_says: "No such bucket exists"
+  terraform_reaction: "I better create that missing bucket!"
+
+  how_to_detect:
+    - "terraform plan shows resource will be CREATED (+)"
+    - "But you didn't delete it from the configuration"
+    - "Bucket doesn't exist in AWS (aws s3 ls)"
+    - "Bucket IS in state (terraform state list)"
+
+solution_options:
+  option_a:
+    name: "Remove from State"
+    when_to_use: "If Jerry was right and the resource is truly unused"
+    command: "terraform state rm aws_s3_bucket.old_logs"
+    pros:
+      - "Accepts Jerry's manual deletion"
+      - "Cleans up state"
+      - "Fast (no AWS API calls)"
+    cons:
+      - "Resource stays deleted (can't get data back)"
+      - "Assumes Jerry's decision was correct"
+    follow_up:
+      - "Remove resource from .tf files too"
+      - "Document why it was removed"
+
+  option_b:
+    name: "Recreate the Resource"
+    when_to_use: "If the resource is actually needed and Jerry made a mistake"
+    command: "terraform apply"
+    pros:
+      - "Restores infrastructure to desired state"
+      - "Corrects Jerry's mistake"
+      - "State matches configuration again"
+    cons:
+      - "Any data in the bucket is permanently lost"
+      - "Recreated bucket is empty"
+      - "Might not be exactly the same (data, policies, etc.)"
+    follow_up:
+      - "Talk to Jerry about the deletion"
+      - "Implement deletion protection"
+      - "Review who has console access"
+
+decision_matrix:
+  recreate_if:
+    - "Application depends on this resource"
+    - "Deletion was clearly a mistake"
+    - "Losing the resource causes issues"
+    - "Resource is in active use"
+
+  remove_if:
+    - "Resource is genuinely unused"
+    - "Cost or security reason to keep deleted"
+    - "Part of intentional decommissioning"
+    - "Jerry's assessment was correct"
+
+validation:
+  accepts_either_solution: true
+  checks:
+    - name: "State and reality match"
+      description: "No divergence between state and AWS"
+
+    - name: "terraform plan shows no changes"
+      description: "Infrastructure is in desired state"
+
+    - name: "No orphaned resources"
+      description: "State doesn't reference deleted resources"
+
+hints:
+  - level: 1
+    hint: "Check if bucket exists: aws s3api head-bucket --bucket <name>"
+
+  - level: 2
+    hint: "terraform plan with + means CREATE (resource is missing)"
+
+  - level: 3
+    hint: "Two valid approaches: terraform state rm OR terraform apply"
+
+  - level: 4
+    hint: "The bucket was called 'old_logs' and Jerry said it wasn't being used"
+
+  - level: 5
+    hint: "terraform state rm aws_s3_bucket.old_logs (if removing from state)"
+
+  - level: 6
+    hint: "terraform apply (if recreating the bucket)"
+
+  - level: 7
+    hint: "Also remove from .tf files if you chose to remove from state"
+
+discussion_points:
+  - "Why didn't Terraform know the bucket was deleted?"
+  - "When should you recreate vs remove from state?"
+  - "What if the bucket had important data?"
+  - "How to prevent manual deletions?"
+  - "What's the relationship between state and reality?"
+  - "How does terraform refresh fit into this?"
+
+real_world_scenarios:
+  - "Team member deletes 'unused' security groups"
+  - "Cost optimization cleanup without checking state"
+  - "Quick fix in console during incident"
+  - "Decommissioning without proper process"
+  - "New team member doesn't know resource is managed"
+  - "Database dropped to save costs (was production!)"
+
+prevention:
+  best_practices:
+    - "Terraform is the single source of truth"
+    - "All changes through Terraform (no console changes)"
+    - "Use lifecycle prevent_destroy for critical resources"
+    - "Use AWS SCPs to restrict manual deletions"
+    - "Require code review for infrastructure changes"
+    - "Regular state vs reality reconciliation"
+    - "Tag resources as 'Terraform-managed'"
+    - "Training on Terraform workflows"
+
+  lifecycle_example: |
+    resource "aws_s3_bucket" "critical" {
+      bucket = "important-data"
+
+      lifecycle {
+        prevent_destroy = true  # Terraform will refuse to destroy
+      }
+    }
+
+terraform_commands:
+  investigation:
+    - "terraform state list  # What's in state?"
+    - "terraform state show aws_s3_bucket.old_logs  # Resource details"
+    - "terraform plan  # What does Terraform want to do?"
+    - "aws s3 ls  # What exists in AWS?"
+    - "aws s3api head-bucket --bucket <name>  # Check specific bucket"
+
+  option_a_removal:
+    - "terraform state rm aws_s3_bucket.old_logs"
+    - "terraform state list  # Verify removal"
+    - "terraform plan  # Should show no changes"
+
+  option_b_recreate:
+    - "terraform apply  # Recreate the bucket"
+    - "terraform plan  # Should show no changes"
+
+  related_cleanup:
+    - "terraform state list | grep old_logs  # Find related resources"
+    - "terraform state rm <resource>  # Remove each related resource"
+
+going_further:
+  - "Test both Option A and Option B approaches"
+  - "Practice with multiple deleted resources"
+  - "Add lifecycle prevent_destroy to critical resources"
+  - "Simulate data loss scenario"
+  - "Learn about terraform state mv for renames"
+  - "Practice with terraform refresh to detect drift"
+
+exam_tips:
+  - "Know when to use terraform state rm vs terraform apply"
+  - "Understand state vs reality mismatches"
+  - "Be able to investigate resource existence in both state and provider"
+  - "Understand implications of manual changes"
+  - "Know how to verify state cleanup"
+
+key_concepts:
+  state_reality_mismatch:
+    description: "When Terraform state doesn't match actual infrastructure"
+    causes:
+      - "Manual changes in provider console/CLI"
+      - "Direct API calls outside Terraform"
+      - "External automation tools"
+      - "Another Terraform workspace/state"
+    detection: "terraform plan shows unexpected creates/deletes"
+
+  out_of_band_changes:
+    description: "Changes made outside of Terraform"
+    examples:
+      - "AWS Console changes"
+      - "AWS CLI commands"
+      - "CloudFormation stacks"
+      - "Manual scripts"
+    risk: "State divergence, unexpected terraform behavior"
+
+  state_rm:
+    description: "Removes resource from state WITHOUT deleting in provider"
+    use_cases:
+      - "Resource was deleted manually"
+      - "Importing into different state file"
+      - "Resource should no longer be managed"
+      - "Fixing state corruption"
+    caution: "Resource still exists in provider after state rm"
+
+notes:
+  - "This exercise accepts BOTH solutions (remove or recreate)"
+  - "The decision depends on whether resource is actually needed"
+  - "The bucket name hints it's old/unused (old_logs)"
+  - "Good practice to also remove from .tf files if removing from state"
+  - "This teaches decision-making, not just command execution"
